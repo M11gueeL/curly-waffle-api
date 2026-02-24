@@ -19,18 +19,24 @@ class UserController extends Controller
         // validamos que los datos vengan bien
         $request->validate([
             'name' => 'required|string|max:255',
+            'last_name' => 'nullable|string|max:255',
+            'username' => 'required|string|max:255|unique:users',
             'email' => 'required|string|email|max:255|unique:users',
-            'phone' => 'nullable|string|max:20|unique:users',
-            'password' => 'required|string|min:8',
+            'phone'      => ['nullable', 'string', 'unique:users', 'regex:/^\+[1-9]\d{1,14}$/'],
+            'password' => 'required|string|min:8|confirmed',
+            'birth_date' => 'nullable|date|before:today',
             
         ]);
 
         // Creamos el usuario usando el modelo User
         $user = User::create([
-            'name' => $request->name,
-            'email' => $request->email,
-            'phone' => $request->phone,
-            'password' => Hash::make($request->password),
+            'name'       => $request->name,
+            'last_name'  => $request->last_name,
+            'username'   => $request->username,
+            'email'      => $request->email,
+            'birth_date' => $request->birth_date,
+            'phone'      => $request->phone,
+            'password'   => Hash::make($request->password),
         ]);
 
         // respondemos con el usuario creado
