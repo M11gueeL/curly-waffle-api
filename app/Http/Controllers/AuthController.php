@@ -57,6 +57,7 @@ class AuthController extends Controller
 
         // Buscamos el usuario por email
         $user = User::where('email', $request->email)->first();
+        
 
         // Verifcamos si existe y si la contraseña es correcta
         if (! $user || ! Hash::check($request->password, $user->password)) {
@@ -65,7 +66,14 @@ class AuthController extends Controller
             ]);
         }
 
-        // IMPORTANTE: Antes de borrar los tokens, cerramos las sesiones en el historial
+        // Verificar si está bloqueado
+        if (!$user->is_active) {
+            throw ValidationException::withMessages([
+                'email' => ['Tu cuenta ha sido suspendida. Contacta al administrador.'],
+            ]);
+        }
+
+        // Antes de borrar los tokens, cerramos las sesiones en el historial
         // para que no queden como "active" eternamente.
         LoginHistory::where('user_id', $user->id)
             ->where('status', 'active')
