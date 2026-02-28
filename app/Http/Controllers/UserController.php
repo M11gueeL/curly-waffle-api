@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
 
 class UserController extends Controller
@@ -80,5 +81,34 @@ class UserController extends Controller
         $user->delete();
 
         return response()->json(null, 204);
+    }
+
+    public function updateProfilePicture(Request $request, User $user)
+    {
+        $request->validate([
+            'profile_picture' => 'required|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
+        ]);
+
+        if ($request->hasFile('profile_picture')) {
+            // Eliminar la foto anterior si existe
+            if ($user->profile_picture) {
+                Storage::disk('public')->delete($user->profile_picture);
+            }
+
+            // Guardar la nueva foto
+            $path = $request->file('profile_picture')->store('profile_pictures', 'public');
+
+            // Actualizar en base de datos
+            $user->profile_picture = $path;
+            $user->save();
+
+            // Devolver la URL pública en formato JSON
+            return response()->json([
+                'message' => 'Foto de perfil actualizada exitosamente.',
+                'profile_picture_url' => Storage::disk('public')->url($path)
+            ], 200);
+        }
+
+        return response()->json(['message' => 'No se proporcionó ninguna imagen.'], 400);
     }
 }
