@@ -102,10 +102,13 @@ class UserController extends Controller
             $user->profile_picture = $path;
             $user->save();
 
+            /** @var \Illuminate\Filesystem\FilesystemAdapter $disk */
+            $disk = Storage::disk('public');
+
             // Devolver la URL pública en formato JSON
             return response()->json([
                 'message' => 'Foto de perfil actualizada exitosamente.',
-                'profile_picture_url' => Storage::disk('public')->url($path)
+                'profile_picture_url' => $disk->url($path)
             ], 200);
         }
 
